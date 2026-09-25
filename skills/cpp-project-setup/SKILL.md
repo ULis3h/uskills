@@ -25,6 +25,43 @@ Assets:
 | `assets/.editorconfig` | Line endings, indentation |
 | `assets/.gitignore` | Build dirs, caches |
 | `assets/ci.yml` | GitHub Actions matrix: gcc/clang × debug/release/asan/tsan, clang-tidy on diff, format check |
+| `assets/CLAUDE.md` | Always-in-context project rules: build commands, definition of done, the core C++ rules |
+| `assets/tools/claude/claude-settings.json` | Claude Code hooks wiring (copy to `.claude/settings.json`) |
+| `assets/tools/claude/post_edit_cpp.sh` | PostToolUse hook: clang-format the edited file, clang-tidy it, return findings to Claude |
+| `assets/tools/claude/stop_check_cpp.sh` | Stop hook: refuse to finish while changed C++ doesn't build warning-free and pass tests |
+
+## 0. Making the rules enforced, not advisory
+
+Skills are text; they raise the default quality of what Claude writes but
+cannot by themselves guarantee that the code compiles, passes clang-tidy,
+or passes tests. Three additions close that gap, and they are the highest
+value part of this setup:
+
+1. **`CLAUDE.md`** at the repository root (from `assets/CLAUDE.md`) keeps
+   the build commands, the definition of done, and the ~15 always-on C++
+   rules in context every turn. Skills load only when triggered; this
+   doesn't.
+2. **PostToolUse hook** (`post_edit_cpp.sh`): after every edit of a C++
+   file, format it and run clang-tidy against the `dev` compile database.
+   Findings come back as blocking feedback, so Claude fixes them
+   immediately instead of after review.
+3. **Stop hook** (`stop_check_cpp.sh`): when Claude tries to finish with
+   modified C++ files, build with `-Werror` and run the tests. Failure
+   output is returned and the turn continues. `stop_hook_active` prevents
+   loops; `CPP_HOOKS=0` disables both hooks for a session.
+
+Install:
+
+```bash
+mkdir -p tools/claude .claude
+cp <skill>/assets/tools/claude/*.sh tools/claude/ && chmod +x tools/claude/*.sh
+cp <skill>/assets/tools/claude/claude-settings.json .claude/settings.json   # or merge
+cp <skill>/assets/CLAUDE.md CLAUDE.md   # then fill in the Project section
+cmake --preset dev                      # creates the compile database the hooks use
+```
+
+Use a separate reviewer for real review: run `cpp-review` in a fresh
+session or subagent on the diff, so the author's context doesn't bias it.
 
 ## 1. Layout
 

@@ -12,12 +12,16 @@ here conflicts with an existing codebase's conventions, follow the codebase
 and mention the difference, but keep the *reasoning* (clarity, explicit
 ownership, no surprises) intact.
 
-Read `references/abseil-tips.md` when you need the specific rule for a
-situation (string building, initialization forms, overloads, lifetimes,
-option structs, and so on). It is a condensed catalog of the Abseil "Tip of
-the Week" canon. Read `references/api-design.md` when designing a new class,
-function family, or library boundary. Read `references/error-handling.md`
-when the code needs to report failures.
+Read `references/exemplar.md` **before writing a new class or module**: it
+is a complete header + implementation + test written to this standard, with
+notes on each decision. Imitating its shape gets most of the rules right
+without consulting them one by one. Read `references/abseil-tips.md` when
+you need the specific rule for a situation (string building, initialization
+forms, overloads, lifetimes, option structs, and so on). It is a condensed
+catalog of the Abseil "Tip of the Week" canon. Read
+`references/api-design.md` when designing a new class, function family, or
+library boundary. Read `references/error-handling.md` when the code needs to
+report failures.
 
 ## 1. Core principles
 

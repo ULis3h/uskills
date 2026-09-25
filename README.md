@@ -50,10 +50,31 @@ cp -r uskills/skills/cpp-* your-project/.claude/skills/
 cp -r uskills/skills/cpp-* ~/.claude/skills/
 ```
 
+## Making it stick: CLAUDE.md and hooks
+
+Skills raise the default quality of what Claude writes, but they are text:
+they cannot guarantee that code compiles warning-free, passes clang-tidy,
+or passes tests. `cpp-project-setup/assets/` therefore also ships:
+
+- `CLAUDE.md`: the always-in-context subset of the rules plus a "definition
+  of done".
+- `tools/claude/post_edit_cpp.sh`: a PostToolUse hook that clang-formats
+  every edited C++ file and returns clang-tidy findings to Claude as
+  blocking feedback.
+- `tools/claude/stop_check_cpp.sh`: a Stop hook that refuses to let Claude
+  finish while modified C++ doesn't build with `-Werror` and pass tests.
+- `tools/claude/claude-settings.json`: the hook wiring for
+  `.claude/settings.json`.
+
+With those installed, the rules are enforced by the harness, not
+remembered by the model. See section 0 of the `cpp-project-setup` skill.
+
 ## Usage notes
 
 - `cpp-style` is the default for any C++ work; the other skills layer on
-  top of it. They are written to be consistent with each other: a hot loop
+  top of it. Its `references/exemplar.md` is a complete header +
+  implementation + test in the target style; Claude reads it before
+  writing a new module. They are written to be consistent with each other: a hot loop
   in `cpp-performance` still follows `cpp-style`'s API rules at its
   boundary, and `cpp-safety`'s tooling is wired up by
   `cpp-project-setup`'s templates.
