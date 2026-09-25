@@ -1,0 +1,9 @@
+# Skill eval workspaces and packaging output
+*-workspace/
+*.skill
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp

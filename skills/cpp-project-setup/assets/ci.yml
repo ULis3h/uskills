@@ -1,0 +1,97 @@
+# .github/workflows/ci.yml
+# Matrix: format check, clang-tidy on the diff, gcc + clang release builds,
+# ASan/UBSan, TSan. MSan and fuzzing nightly.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 3 * * *"   # nightly: msan + fuzz
+
+env:
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+  CCACHE_MAXSIZE: 2G
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: clang-format check
+        run: |
+          sudo apt-get install -y clang-format-18
+          git diff -U0 --no-color origin/${{ github.base_ref || 'main' }}...HEAD -- '*.cc' '*.h' \
+            | clang-format-diff-18 -p1 -style=file | tee format.diff
+          test ! -s format.diff
+
+  tidy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: deps
+        run: sudo apt-get install -y ninja-build clang-18 clang-tidy-18 ccache
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-tidy-${{ github.sha }}
+          restore-keys: ccache-tidy-
+      - name: configure
+        run: CC=clang-18 CXX=clang++-18 cmake --preset dev
+      - name: clang-tidy on diff
+        run: |
+          git diff -U0 --no-color origin/${{ github.base_ref || 'main' }}...HEAD -- '*.cc' '*.h' \
+            | clang-tidy-diff-18.py -p1 -path build/dev -quiet -j"$(nproc)"
+
+  build-test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: clang-release, preset: release,     cc: clang-18, cxx: clang++-18 }
+          - { name: gcc-release,   preset: release-gcc, cc: gcc-14,   cxx: g++-14 }
+          - { name: asan-ubsan,    preset: asan,        cc: clang-18, cxx: clang++-18 }
+          - { name: tsan,          preset: tsan,        cc: clang-18, cxx: clang++-18 }
+    name: ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: deps
+        run: sudo apt-get install -y ninja-build ccache ${{ matrix.cc }} lld-18
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ matrix.name }}-${{ github.sha }}
+          restore-keys: ccache-${{ matrix.name }}-
+      - name: configure
+        run: CC=${{ matrix.cc }} CXX=${{ matrix.cxx }} cmake --preset ${{ matrix.preset }}
+      - name: build
+        run: cmake --build --preset ${{ matrix.preset }} -j"$(nproc)"
+      - name: test
+        run: ctest --preset ${{ matrix.preset }}
+
+  nightly:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: deps
+        run: sudo apt-get install -y ninja-build ccache clang-18 lld-18
+      - name: fuzz regression (corpus + known crashes)
+        run: |
+          CC=clang-18 CXX=clang++-18 cmake --preset fuzz
+          cmake --build --preset fuzz -j"$(nproc)"
+          for f in build/fuzz/*_fuzzer; do
+            name=$(basename "$f")
+            "$f" -runs=0 "fuzz/corpus/$name" "fuzz/crashes/$name" || exit 1
+          done
+      - name: fuzz (time-boxed)
+        run: |
+          for f in build/fuzz/*_fuzzer; do
+            name=$(basename "$f")
+            timeout 20m "$f" -max_total_time=1100 -jobs=4 -workers=4 "fuzz/corpus/$name" || exit 1
+          done
+      # MSan needs an instrumented libc++; build it once and cache, or use a container image.

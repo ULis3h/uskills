@@ -1,0 +1,18 @@
+{
+  "name": "uskills",
+  "owner": {
+    "name": "ULis3h",
+    "url": "https://github.com/ULis3h"
+  },
+  "description": "ULis3h's Claude Code skills. Currently: C++ (Abseil-style code, ClickHouse-style performance).",
+  "plugins": [
+    {
+      "name": "cpp",
+      "source": "./",
+      "description": "Write safe, fast, elegantly designed C++: Abseil-style APIs, ClickHouse-style performance, memory safety, concurrency, design patterns, project setup, and code review.",
+      "version": "0.1.0",
+      "category": "development",
+      "keywords": ["cpp", "c++", "abseil", "clickhouse", "performance", "safety"]
+    }
+  ]
+}

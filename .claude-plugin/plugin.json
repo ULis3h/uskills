@@ -1,0 +1,12 @@
+{
+  "name": "cpp",
+  "displayName": "C++ Skills",
+  "version": "0.1.0",
+  "description": "Skills for writing safe, fast, well-designed C++: Abseil-style APIs and code, ClickHouse-style performance engineering, memory safety, concurrency, design patterns, project setup, and code review.",
+  "author": {
+    "name": "ULis3h"
+  },
+  "homepage": "https://github.com/ULis3h/uskills",
+  "repository": "https://github.com/ULis3h/uskills",
+  "keywords": ["cpp", "c++", "abseil", "clickhouse", "performance", "safety", "cmake", "code-review"]
+}

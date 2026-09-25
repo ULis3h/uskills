@@ -1,0 +1,58 @@
+# Google style with a wider column limit. Keep formatting decisions here,
+# never in code review.
+BasedOnStyle: Google
+Language: Cpp
+Standard: c++20
+
+ColumnLimit: 100
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+AccessModifierOffset: -1
+
+# Braces and layout (Google defaults, spelled out for clarity)
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: true
+AllowShortLambdasOnASingleLine: All
+AllowShortCaseLabelsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: Yes
+BinPackArguments: true
+BinPackParameters: true
+DerivePointerAlignment: false
+PointerAlignment: Left
+ReferenceAlignment: Left
+QualifierAlignment: Left
+SpaceAfterTemplateKeyword: true
+Cpp11BracedListStyle: true
+InsertBraces: false
+InsertNewlineAtEOF: true
+RemoveSemicolon: true
+PackConstructorInitializers: NextLine
+
+# Includes: main header, C system, C++ std, other libs, project.
+IncludeBlocks: Regroup
+IncludeIsMainRegex: '(_test|_bench|_fuzzer)?$'
+IncludeCategories:
+  - Regex: '^<[a-z_]+\.h>'           # C system headers
+    Priority: 1
+  - Regex: '^<[a-z_0-9]+>'            # C++ standard library
+    Priority: 2
+  - Regex: '^<.*'                     # other libraries in angle brackets
+    Priority: 3
+  - Regex: '^"(absl|gtest|gmock|benchmark|fmt)/'   # third-party quoted
+    Priority: 4
+  - Regex: '^".*'                     # project headers
+    Priority: 5
+SortIncludes: CaseSensitive
+
+# Comments and misc
+ReflowComments: true
+FixNamespaceComments: true
+SpacesBeforeTrailingComments: 2
+AttributeMacros: [ABSL_ATTRIBUTE_LIFETIME_BOUND, ABSL_MUST_USE_RESULT]
+StatementAttributeLikeMacros: [ABSL_GUARDED_BY, ABSL_PT_GUARDED_BY, ABSL_EXCLUSIVE_LOCKS_REQUIRED, ABSL_SHARED_LOCKS_REQUIRED, ABSL_LOCKS_EXCLUDED]
+Macros:
+  - RETURN_IF_ERROR(x)=x
+  - ASSIGN_OR_RETURN(x, y)=x = y

@@ -1,0 +1,39 @@
+# Build outputs
+build/
+cmake-build-*/
+out/
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeUserPresets.json
+compile_commands.json
+Testing/
+_deps/
+
+# Coverage and profiling
+*.profraw
+*.profdata
+*.gcda
+*.gcno
+perf.data*
+*.svg
+
+# Fuzzing
+crash-*
+leak-*
+timeout-*
+fuzz-*.log
+
+# Editors
+.vscode/
+.idea/
+*.swp
+.cache/
+.ccache/

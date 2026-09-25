@@ -1,0 +1,101 @@
+# Curated clang-tidy configuration. Every disabled check has a reason;
+# every enabled group is one the cpp-safety / cpp-style skills rely on.
+#
+# Disabled and why:
+#   -modernize-use-trailing-return-type   style preference, noisy
+#   -readability-magic-numbers,-cppcoreguidelines-avoid-magic-numbers   too noisy in tests and kernels
+#   -readability-identifier-length        loop indices i, j, n are fine
+#   -cppcoreguidelines-pro-bounds-pointer-arithmetic   hot loops legitimately use pointers
+#   -cppcoreguidelines-pro-bounds-constant-array-index   same
+#   -cppcoreguidelines-pro-type-reinterpret-cast   allowed in low-level code with a comment
+#   -cppcoreguidelines-avoid-c-arrays,-modernize-avoid-c-arrays   `const char kName[]` constants
+#   -cppcoreguidelines-non-private-member-variables-in-classes,-misc-non-private-member-variables-in-classes   structs with public data are fine
+#   -bugprone-easily-swappable-parameters   real but too noisy; use strong types (cpp-design-patterns)
+#   -readability-function-cognitive-complexity   subjective
+#   -misc-include-cleaner   use IWYU tooling instead if wanted
+#   -google-readability-todo   TODO(owner) enforced by review
+#   -performance-avoid-endl   we already forbid endl by style; avoids duplicate noise with readability
+#   -cppcoreguidelines-owning-memory   requires gsl::owner annotations; unique_ptr discipline is enforced by review instead
+#   -cert-err58-cpp   flags every static with a throwing constructor; cpp-style already bans non-trivial globals
+
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  cert-*,
+  -cert-err58-cpp,
+  clang-analyzer-*,
+  concurrency-*,
+  cppcoreguidelines-*,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-avoid-c-arrays,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-owning-memory,
+  google-*,
+  -google-readability-todo,
+  misc-*,
+  -misc-non-private-member-variables-in-classes,
+  -misc-include-cleaner,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  -modernize-avoid-c-arrays,
+  performance-*,
+  -performance-avoid-endl,
+  portability-*,
+  readability-*,
+  -readability-magic-numbers,
+  -readability-identifier-length,
+  -readability-function-cognitive-complexity,
+  -readability-named-parameter
+
+WarningsAsErrors: '*'
+HeaderFilterRegex: '^.*/src/.*'
+FormatStyle: file
+
+CheckOptions:
+  # Google naming, matching cpp-style.
+  readability-identifier-naming.NamespaceCase: lower_case
+  readability-identifier-naming.ClassCase: CamelCase
+  readability-identifier-naming.StructCase: CamelCase
+  readability-identifier-naming.EnumCase: CamelCase
+  readability-identifier-naming.EnumConstantCase: CamelCase
+  readability-identifier-naming.EnumConstantPrefix: k
+  readability-identifier-naming.FunctionCase: CamelCase
+  readability-identifier-naming.MethodCase: CamelCase
+  readability-identifier-naming.VariableCase: lower_case
+  readability-identifier-naming.ParameterCase: lower_case
+  readability-identifier-naming.PrivateMemberCase: lower_case
+  readability-identifier-naming.PrivateMemberSuffix: _
+  readability-identifier-naming.ProtectedMemberCase: lower_case
+  readability-identifier-naming.ProtectedMemberSuffix: _
+  readability-identifier-naming.PublicMemberCase: lower_case
+  readability-identifier-naming.ConstexprVariableCase: CamelCase
+  readability-identifier-naming.ConstexprVariablePrefix: k
+  readability-identifier-naming.GlobalConstantCase: CamelCase
+  readability-identifier-naming.GlobalConstantPrefix: k
+  readability-identifier-naming.StaticConstantCase: CamelCase
+  readability-identifier-naming.StaticConstantPrefix: k
+  readability-identifier-naming.MacroDefinitionCase: UPPER_CASE
+  readability-identifier-naming.TemplateParameterCase: CamelCase
+  readability-identifier-naming.TypeAliasCase: CamelCase
+  readability-identifier-naming.TypedefCase: CamelCase
+  # Accessor-style getters (size(), name()) are allowed lower_case:
+  readability-identifier-naming.MethodIgnoredRegexp: '^[a-z_]+$'
+
+  # Behavior
+  bugprone-unchecked-optional-access.IgnoreSmartPointerDereference: true
+  cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor: true
+  cppcoreguidelines-special-member-functions.AllowMissingMoveFunctionsWhenCopyIsDeleted: true
+  misc-const-correctness.AnalyzeValues: true
+  misc-const-correctness.WarnPointersAsValues: false
+  modernize-use-nodiscard.ReplacementString: '[[nodiscard]]'
+  performance-unnecessary-value-param.AllowedTypes: 'absl::string_view;std::string_view;absl::Span;std::span;absl::FunctionRef'
+  performance-move-const-arg.CheckTriviallyCopyableMove: false
+  readability-braces-around-statements.ShortStatementLines: 2
+  readability-implicit-bool-conversion.AllowPointerConditions: true
+  readability-implicit-bool-conversion.AllowIntegerConditions: false
+  readability-uppercase-literal-suffix.NewSuffixes: 'L;LL;U;UL;ULL'
+  google-readability-namespace-comments.ShortNamespaceLines: 10
