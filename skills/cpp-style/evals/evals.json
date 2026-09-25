@@ -1,0 +1,74 @@
+{
+  "skill_name": "cpp-style",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need a small C++ config loader for our service. The config file is plain text, one `key=value` per line, `#` starts a comment, blank lines ignored. Keys we care about: host (string), port (int, 1-65535), timeout_ms (int, positive). Missing file, unknown key, bad number, or out of range value must be reported to the caller with a useful message. Please write config.h, config.cc and config_test.cc. We use Abseil and GoogleTest.",
+      "expected_output": "A header with a documented Config struct and a LoadConfig function returning absl::StatusOr<Config>, taking absl::string_view path; implementation using absl::StrSplit/SimpleAtoi and returning InvalidArgument/NotFound with messages containing the offending line or value; tests using StatusIs/IsOkAndHolds with behavior-named cases for each error path.",
+      "files": [],
+      "assertions": [
+        "Failures are reported via absl::Status / absl::StatusOr (not exceptions, bool, or sentinel values)",
+        "Read-only string parameters are absl::string_view or std::string_view (no const std::string& for read-only input)",
+        "No `using namespace` anywhere",
+        "No raw `new` / `delete` (ownership via values, containers, or unique_ptr)",
+        "Every public function/class in the header has a comment describing its contract and error conditions",
+        "Tests use behavior-describing names of the form TEST(Suite, BehaviorWhenCondition) rather than Test1/TestBasic",
+        "Tests assert Status outcomes with matchers (StatusIs / IsOkAndHolds / IsOk / EXPECT_THAT), not only EXPECT_TRUE(status.ok())",
+        "No output parameters where a return value would do (results are returned, possibly as a struct)",
+        "No bool parameters used as behavior flags (enum class or option struct instead)",
+        "Error messages include the offending value, key, or line so the caller can act on them",
+        "Number parsing uses absl::SimpleAtoi or std::from_chars (not atoi/stoi/strtol)",
+        "Line splitting uses absl::StrSplit or an explicit string_view scan (no std::stringstream / getline-based tokenizing)",
+        "Config struct fields have default member initializers",
+        "Each documented error path (missing file, unknown key, bad number, out of range) has its own test case"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a C++ retry helper for our RPC layer: run an operation that may fail, retry up to N attempts with exponential backoff (base delay, multiplier, max delay) plus jitter, and give up after the last attempt with the last error. It has to be unit-testable without actually sleeping or depending on wall-clock time, and callers should be able to configure it per call site. Abseil is available. Include tests.",
+      "expected_output": "An options struct with defaults (max_attempts, initial_backoff, multiplier, max_backoff, jitter); a Retry function taking absl::FunctionRef<absl::Status()> and returning absl::Status; sleeping and randomness injected via a small interface or callbacks so tests use fakes; explicit lifetime/thread-safety docs; tests covering success on first try, success after failures, exhaustion returning the last error, backoff schedule and cap, using a fake sleeper.",
+      "files": [],
+      "assertions": [
+        "Failures are reported via absl::Status / absl::StatusOr (not exceptions, bool, or sentinel values)",
+        "Read-only string parameters are absl::string_view or std::string_view (no const std::string& for read-only input)",
+        "No `using namespace` anywhere",
+        "No raw `new` / `delete` (ownership via values, containers, or unique_ptr)",
+        "Every public function/class in the header has a comment describing its contract and error conditions",
+        "Tests use behavior-describing names of the form TEST(Suite, BehaviorWhenCondition) rather than Test1/TestBasic",
+        "Tests assert Status outcomes with matchers (StatusIs / IsOkAndHolds / IsOk / EXPECT_THAT), not only EXPECT_TRUE(status.ok())",
+        "No output parameters where a return value would do (results are returned, possibly as a struct)",
+        "No bool parameters used as behavior flags (enum class or option struct instead)",
+        "Configuration is an option struct with per-field defaults (max attempts, initial backoff, multiplier, max backoff, jitter)",
+        "Backoff delays are absl::Duration, not raw ints of milliseconds",
+        "Sleeping and randomness are injected (interface, callback, or template) so tests do not sleep",
+        "The operation is taken as absl::FunctionRef or absl::AnyInvocable / template callable, not std::function",
+        "Tests cover: success first try, success after failures, exhaustion returns last error, backoff schedule respects the cap"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "This function is in our codebase (see legacy_report.cc). Reviewers keep complaining about it. Please refactor it into clean, modern C++ that we would be happy to keep, without changing what it computes. We have Abseil and GoogleTest available. Give me the refactored header/source and a test.",
+      "expected_output": "Refactor removes `using namespace std`, raw new/delete, the bool flag parameter (enum or option struct), the out-parameter (returns a struct or StatusOr), string concatenation with + in loops (StrCat/StrAppend/StrJoin), C-style casts, magic sentinel returns; uses string_view/Span parameters, explicit ownership, const correctness; splits into small named functions; adds behavior-named tests that pin the computed output.",
+      "files": [
+        "legacy_report.cc"
+      ],
+      "assertions": [
+        "Failures are reported via absl::Status / absl::StatusOr (not exceptions, bool, or sentinel values)",
+        "Read-only string parameters are absl::string_view or std::string_view (no const std::string& for read-only input)",
+        "No `using namespace` anywhere",
+        "No raw `new` / `delete` (ownership via values, containers, or unique_ptr)",
+        "Every public function/class in the header has a comment describing its contract and error conditions",
+        "Tests use behavior-describing names of the form TEST(Suite, BehaviorWhenCondition) rather than Test1/TestBasic",
+        "Tests assert Status outcomes with matchers (StatusIs / IsOkAndHolds / IsOk / EXPECT_THAT), not only EXPECT_TRUE(status.ok())",
+        "No output parameters where a return value would do (results are returned, possibly as a struct)",
+        "No bool parameters used as behavior flags (enum class or option struct instead)",
+        "The `detailed` bool flag is replaced by an enum class or option struct",
+        "The (sales, out, totals_out) out-parameters are replaced by a returned struct or StatusOr",
+        "String building uses absl::StrCat/StrAppend/StrFormat/StrJoin (no operator+ chains or stringstream)",
+        "The O(n^2) manual sort is replaced by std::sort / absl::c_sort with a comparator",
+        "Input is taken as absl::Span<const Sale> or const std::vector<Sale>&, never a non-const pointer",
+        "Tests pin the exact report text for at least: empty input error, negative amount error, top_n truncation, detailed vs summary output"
+      ]
+    }
+  ]
+}
